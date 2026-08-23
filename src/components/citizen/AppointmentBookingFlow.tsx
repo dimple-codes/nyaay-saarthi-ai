@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { 
   Calendar, Clock, Video, Phone, Users, FileText, CheckCircle2, 
-  ArrowLeft, ArrowRight, ShieldCheck, Scale, AlertCircle, Check
+  ArrowLeft, ArrowRight, ShieldCheck, Scale, AlertCircle, Check, X
 } from 'lucide-react';
 import { Language, AppRoute, Advocate, Appointment, Application, AuthUser } from '../../types';
 import { saveAppointment, saveApplication } from '../../data/portalData';
+import { AppointmentBookingConfirmationModal } from './AppointmentBookingConfirmationModal';
+import { AdvocateResponseTimer } from './AdvocateResponseTimer';
 
 interface AppointmentBookingFlowProps {
   advocate: Advocate;
@@ -43,6 +45,7 @@ export function AppointmentBookingFlow({
   const [consultationType, setConsultationType] = useState<'Video' | 'Audio' | 'In-Person'>('Video');
   const [issueDescription, setIssueDescription] = useState('');
   const [confirmedAppointment, setConfirmedAppointment] = useState<Appointment | null>(null);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
   const purposes = [
     'Consumer Grievance / Defective Product',
@@ -97,6 +100,7 @@ export function AppointmentBookingFlow({
   const handleConfirmBooking = () => {
     const aptRefId = `APT-${Date.now().toString().slice(-4)}`;
     const appRefId = `NS-${Date.now().toString().slice(-4)}`;
+    const nowIso = new Date().toISOString();
 
     const newAppointment: Appointment = {
       id: `apt_${Date.now()}`,
@@ -115,10 +119,10 @@ export function AppointmentBookingFlow({
       consultationType,
       issue: issueDescription || 'General legal consultation request.',
       fee: advocate.consultationFee,
-      status: 'upcoming',
+      status: 'pending',
       meetingLink: consultationType === 'Video' ? `https://meet.google.com/nyaay-sarathi-session-${aptRefId.toLowerCase()}` : undefined,
       applicationId: appRefId,
-      createdAt: new Date().toISOString(),
+      createdAt: nowIso,
     };
 
     const newApplication: Application = {
@@ -135,23 +139,27 @@ export function AppointmentBookingFlow({
       appointmentTime: selectedTime,
       fee: advocate.consultationFee,
       paymentStatus: 'Paid',
-      acceptanceStatus: 'Accepted',
+      acceptanceStatus: 'Pending',
       status: 'Under Review',
       timeline: [
-        { stage: 'Created', title: 'Consultation & Application Created', description: `Consultation confirmed with ${advocate.name}`, status: 'completed', date: new Date().toLocaleString() },
-        { stage: 'Documents', title: 'Awaiting Consultation', description: 'Session scheduled with verified counsel', status: 'current' },
-        { stage: 'Advocate Review', title: 'Advocate Legal Review', description: 'Notice drafting & legal strategy formulation', status: 'pending' },
+        { stage: 'Created', title: 'Consultation & Application Created', description: `Consultation requested with ${advocate.name}`, status: 'completed', date: new Date().toLocaleString() },
+        { stage: 'Advocate Review', title: 'Awaiting Advocate Response', description: 'Advocate reviewing dispute summary (24h window)', status: 'current' },
+        { stage: 'Documents', title: 'Awaiting Consultation', description: 'Session scheduled upon advocate confirmation', status: 'pending' },
         { stage: 'Submitted', title: 'Submission / Notice Service', description: 'Filing before competent authority', status: 'pending' },
         { stage: 'Resolved', title: 'Resolution', description: 'Matter settled / completed', status: 'pending' },
       ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: nowIso,
+      updatedAt: nowIso,
     };
 
     saveAppointment(newAppointment);
     saveApplication(newApplication);
     setConfirmedAppointment(newAppointment);
+    setShowConfirmationModal(true);
     setCurrentStep(8);
+    if (onBookingComplete) {
+      onBookingComplete(newAppointment);
+    }
   };
 
   return (
@@ -511,23 +519,47 @@ export function AppointmentBookingFlow({
         {/* Step 8: Confirmed Success Screen */}
         {currentStep === 8 && confirmedAppointment && (
           <div className="text-center py-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center border-2 border-emerald-200">
-              <CheckCircle2 className="w-8 h-8" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-emerald-100/90 text-emerald-600 mx-auto flex items-center justify-center border-4 border-emerald-50 shadow-inner">
+              <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 text-emerald-600" />
             </div>
 
-            <div className="space-y-1">
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                Appointment Successfully Scheduled
-              </span>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 pt-2">
-                Consultation Confirmed with {advocate.name}
+            <div className="space-y-1.5">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                {language === 'en' ? 'Your Appointment is Booked' : 'आपकी कानूनी नियुक्ति बुक हो गई है'}
               </h2>
-              <p className="text-xs text-slate-500 font-mono">
+              <p className="text-xs sm:text-sm text-slate-600 font-medium max-w-md mx-auto leading-relaxed">
+                {language === 'en'
+                  ? 'Your appointment request has been sent to the advocate and is awaiting their response.'
+                  : 'आपका अपॉइंटमेंट अनुरोध अधिवक्ता को भेज दिया गया है और उनकी स्वीकृति की प्रतीक्षा में है।'}
+              </p>
+              <p className="text-xs text-slate-500 font-mono pt-1">
                 Booking Reference ID: {confirmedAppointment.id}
               </p>
             </div>
 
-            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 text-left text-xs max-w-lg mx-auto space-y-2">
+            {/* 24-Hour Advocate Response Timer Banner */}
+            <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200/90 space-y-2 text-center max-w-lg mx-auto">
+              <div className="flex items-center justify-center gap-2">
+                <AdvocateResponseTimer createdAt={confirmedAppointment.createdAt} />
+              </div>
+              <p className="text-[11px] text-amber-800 font-medium leading-normal">
+                {language === 'en'
+                  ? 'The advocate will review your dispute details within 24 hours. Track real-time progress on your Citizen Dashboard.'
+                  : 'अधिवक्ता 24 घंटे के भीतर आपके मामले की समीक्षा करेंगे। नागरिक डैशबोर्ड पर लाइव स्थिति देखें।'}
+              </p>
+            </div>
+
+            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 text-left text-xs max-w-lg mx-auto space-y-2.5">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200/70">
+                <span className="text-slate-500 font-semibold">Status:</span>
+                <span className="text-[11px] font-bold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300">
+                  Pending Advocate Response
+                </span>
+              </div>
+              <p className="flex justify-between">
+                <span className="text-slate-500">Selected Advocate:</span>
+                <strong className="text-slate-800">{advocate.name}</strong>
+              </p>
               <p className="flex justify-between">
                 <span className="text-slate-500">Scheduled Date:</span>
                 <strong className="text-slate-800">{confirmedAppointment.date}</strong>
@@ -538,47 +570,46 @@ export function AppointmentBookingFlow({
               </p>
               <p className="flex justify-between">
                 <span className="text-slate-500">Mode:</span>
-                <strong className="text-sky-700">{confirmedAppointment.consultationType} Meeting</strong>
+                <strong className="text-sky-700">{confirmedAppointment.consultationType} Consultation</strong>
               </p>
-              {confirmedAppointment.meetingLink && (
-                <p className="flex justify-between">
-                  <span className="text-slate-500">Meeting Link:</span>
-                  <a 
-                    href={confirmedAppointment.meetingLink} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="text-sky-600 font-bold hover:underline"
-                  >
-                    Open Google Meet
-                  </a>
-                </p>
-              )}
+              <p className="flex justify-between">
+                <span className="text-slate-500">Consultation Fee:</span>
+                <strong className="text-slate-900 font-bold">₹{confirmedAppointment.fee}</strong>
+              </p>
             </div>
 
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
+                id="btn-return-dashboard-from-booking"
+                onClick={() => onNavigate('user/home')}
+                className="w-full sm:w-auto py-3 px-6 bg-sky-600 hover:bg-sky-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md shadow-sky-600/20 cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>Go to Citizen Dashboard</span>
+                <ArrowRight className="w-4 h-4 text-sky-100" />
+              </button>
+              <button
+                id="btn-view-appointments-from-booking"
                 onClick={() => onNavigate('user/appointments')}
-                className="w-full sm:w-auto py-2.5 px-5 bg-sky-600 hover:bg-sky-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs cursor-pointer"
+                className="w-full sm:w-auto py-3 px-5 bg-white border border-slate-200 text-slate-700 text-xs sm:text-sm font-bold rounded-xl hover:bg-slate-50 cursor-pointer"
               >
                 View My Appointments
-              </button>
-              <button
-                onClick={() => onNavigate('user/applications')}
-                className="w-full sm:w-auto py-2.5 px-5 bg-white border border-slate-200 text-slate-700 text-xs sm:text-sm font-bold rounded-xl hover:bg-slate-50 cursor-pointer"
-              >
-                Track in My Applications
-              </button>
-              <button
-                onClick={() => onNavigate('user/home')}
-                className="w-full sm:w-auto py-2.5 px-5 text-slate-500 hover:text-slate-900 text-xs font-semibold cursor-pointer"
-              >
-                Return to Dashboard
               </button>
             </div>
           </div>
         )}
 
       </div>
+
+      {/* Confirmation Modal Popup */}
+      {confirmedAppointment && (
+        <AppointmentBookingConfirmationModal
+          isOpen={showConfirmationModal}
+          appointment={confirmedAppointment}
+          language={language}
+          onClose={() => setShowConfirmationModal(false)}
+          onNavigate={onNavigate}
+        />
+      )}
 
     </div>
   );

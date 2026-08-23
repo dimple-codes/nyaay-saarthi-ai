@@ -23,7 +23,9 @@ export type AppRoute =
   | 'chat'
   | 'rights'
   | 'advocate/home'
-  | 'advocate-dashboard';
+  | 'advocate-dashboard'
+  | 'advocate/user-profile'
+  | 'advocate/documents';
 
 export interface AuthUser {
   id: string;
@@ -96,14 +98,16 @@ export interface Appointment {
   courtLevel: string;
   date: string;
   time: string;
-  consultationType: 'Video' | 'Audio' | 'In-person';
+  consultationType: 'Video' | 'Audio' | 'In-person' | 'In-Person';
   issue: string;
   fee: number;
-  status: 'upcoming' | 'completed' | 'cancelled';
+  status: 'pending' | 'upcoming' | 'confirmed' | 'completed' | 'cancelled' | 'expired' | 'no-response';
   meetingLink?: string;
   locationAddress?: string;
   createdAt: string;
   applicationId?: string;
+  acceptedAt?: string;
+  expiredAt?: string;
 }
 
 export interface ApplicationTimelineItem {

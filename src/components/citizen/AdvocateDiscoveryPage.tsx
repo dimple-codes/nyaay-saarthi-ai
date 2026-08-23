@@ -456,7 +456,13 @@ export function AdvocateDiscoveryPage({
                   <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
                     <button
                       id={`btn-view-profile-${adv.id}`}
-                      onClick={() => onSelectAdvocate(adv)}
+                      onClick={() => {
+                        if (onSelectAdvocate) {
+                          onSelectAdvocate(adv);
+                        } else {
+                          onNavigate('advocate-profile', { advocate: adv });
+                        }
+                      }}
                       className="py-2.5 px-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer text-center"
                     >
                       {language === 'en' ? 'View Profile' : 'प्रोफ़ाइल देखें'}
@@ -464,7 +470,13 @@ export function AdvocateDiscoveryPage({
 
                     <button
                       id={`btn-book-apt-${adv.id}`}
-                      onClick={() => onBookAppointment(adv)}
+                      onClick={() => {
+                        if (onBookAppointment) {
+                          onBookAppointment(adv);
+                        } else {
+                          onNavigate('appointment-book', { advocate: adv });
+                        }
+                      }}
                       className="py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer text-center flex items-center justify-center gap-1"
                     >
                       <span>{language === 'en' ? 'Book Appointment' : 'अपॉइंटमेंट लें'}</span>

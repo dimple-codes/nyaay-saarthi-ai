@@ -578,11 +578,78 @@ export function saveStoredUser(user: AuthUser): void {
   }
 }
 
+export interface ResponseCountdown {
+  totalMs: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  isExpired: boolean;
+  formatted: string;
+}
+
+export function calculateResponseCountdown(createdAt: string, windowHours = 24): ResponseCountdown {
+  const createdTime = new Date(createdAt).getTime();
+  const expiryTime = createdTime + windowHours * 60 * 60 * 1000;
+  const now = Date.now();
+  const totalMs = expiryTime - now;
+
+  if (isNaN(createdTime) || totalMs <= 0) {
+    return {
+      totalMs: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      isExpired: true,
+      formatted: '00h 00m 00s remaining',
+    };
+  }
+
+  const totalSeconds = Math.floor(totalMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  const formatted = `${hours}h ${pad(minutes)}m ${pad(seconds)}s remaining`;
+
+  return {
+    totalMs,
+    hours,
+    minutes,
+    seconds,
+    isExpired: false,
+    formatted,
+  };
+}
+
 export function getStoredAppointments(): Appointment[] {
   if (typeof window === 'undefined') return INITIAL_APPOINTMENTS;
   try {
     const data = localStorage.getItem(APPOINTMENTS_KEY);
-    if (data) return JSON.parse(data);
+    let list: Appointment[] = data ? JSON.parse(data) : INITIAL_APPOINTMENTS;
+
+    // Check and automatically transition any expired pending appointments
+    let modified = false;
+    list = list.map((item) => {
+      if (item.status === 'pending') {
+        const countdown = calculateResponseCountdown(item.createdAt, 24);
+        if (countdown.isExpired) {
+          modified = true;
+          return {
+            ...item,
+            status: 'expired',
+            expiredAt: item.expiredAt || new Date().toISOString(),
+          };
+        }
+      }
+      return item;
+    });
+
+    if (modified) {
+      localStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(list));
+    }
+
+    return list;
   } catch (e) {
     console.error('Failed to parse appointments', e);
   }
@@ -600,15 +667,64 @@ export function saveAppointment(appointment: Appointment): void {
   }
 }
 
-export function updateAppointmentStatus(id: string, status: 'upcoming' | 'completed' | 'cancelled'): void {
+export function updateAppointmentStatus(
+  id: string, 
+  status: 'pending' | 'upcoming' | 'confirmed' | 'completed' | 'cancelled' | 'expired' | 'no-response'
+): void {
   if (typeof window === 'undefined') return;
   try {
     const list = getStoredAppointments();
-    const updated = list.map(item => item.id === id ? { ...item, status } : item);
+    const updated = list.map(item => {
+      if (item.id === id) {
+        return { 
+          ...item, 
+          status,
+          ...(status === 'upcoming' || status === 'confirmed' ? { acceptedAt: new Date().toISOString() } : {}),
+          ...(status === 'expired' || status === 'no-response' ? { expiredAt: new Date().toISOString() } : {})
+        };
+      }
+      return item;
+    });
     localStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(updated));
   } catch (e) {
     console.error('Failed to update appointment status', e);
   }
+}
+
+export function acceptAppointment(id: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const list = getStoredAppointments();
+    const updated = list.map(item => {
+      if (item.id === id) {
+        const meetingLink = item.meetingLink || (item.consultationType === 'Video' 
+          ? `https://meet.google.com/nyaay-sarathi-session-${item.id.toLowerCase().slice(-6)}` 
+          : undefined);
+        return {
+          ...item,
+          status: 'upcoming' as const,
+          acceptedAt: new Date().toISOString(),
+          meetingLink,
+        };
+      }
+      return item;
+    });
+    localStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(updated));
+
+    // Also update any matching application status to Accepted
+    const appList = getStoredApplications();
+    const matchingApp = appList.find(a => a.appointmentId === id);
+    if (matchingApp) {
+      const updatedApps = appList.map(a => a.id === matchingApp.id ? { ...a, acceptanceStatus: 'Accepted' as const, status: 'Under Review' as const } : a);
+      localStorage.setItem(APPLICATIONS_KEY, JSON.stringify(updatedApps));
+    }
+  } catch (e) {
+    console.error('Failed to accept appointment', e);
+  }
+}
+
+export function expireAppointment(id: string): void {
+  updateAppointmentStatus(id, 'expired');
 }
 
 export function getStoredApplications(): Application[] {

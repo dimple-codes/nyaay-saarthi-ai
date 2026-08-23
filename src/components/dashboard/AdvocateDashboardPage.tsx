@@ -151,7 +151,7 @@ interface AdvocateDashboardPageProps {
   user: AuthUser;
   language: Language;
   onLanguageChange: (lang: Language) => void;
-  onNavigate: (route: AppRoute) => void;
+  onNavigate: (route: AppRoute, params?: any) => void;
   onLogout: () => void;
   onOpenDialog: (actionKey: string, topic?: string) => void;
   initialView?: 'feed' | 'history' | 'bns' | 'chat';
@@ -891,6 +891,27 @@ export function AdvocateDashboardPage({
                                     <span>{file}</span>
                                   </span>
                                 ))}
+                              </div>
+
+                              {/* Options below the appeal/application details: Show User Profile & View Documents / Evidence */}
+                              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 mt-1">
+                                <button
+                                  id={`btn-show-user-profile-${req.id}`}
+                                  onClick={() => onNavigate('advocate/user-profile', { request: req })}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-sky-50 border border-slate-200 hover:border-sky-300 text-slate-700 hover:text-sky-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+                                >
+                                  <User className="w-3.5 h-3.5 text-sky-600" />
+                                  <span>{language === 'en' ? 'Show User Profile' : 'उपयोगकर्ता प्रोफ़ाइल देखें'}</span>
+                                </button>
+
+                                <button
+                                  id={`btn-view-evidence-${req.id}`}
+                                  onClick={() => onNavigate('advocate/documents', { request: req })}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-sky-50 border border-slate-200 hover:border-sky-300 text-slate-700 hover:text-sky-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+                                >
+                                  <FileText className="w-3.5 h-3.5 text-sky-600" />
+                                  <span>{language === 'en' ? 'View Documents / Evidence' : 'दस्तावेज़ / साक्ष्य देखें'}</span>
+                                </button>
                               </div>
 
                               {/* Accepted Banner */}

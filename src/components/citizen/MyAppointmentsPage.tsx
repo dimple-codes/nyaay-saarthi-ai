@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Calendar, Clock, Video, Phone, Users, CheckCircle2, 
-  XCircle, AlertCircle, ArrowRight, ExternalLink, RefreshCw, X, ShieldCheck
+  XCircle, AlertCircle, ArrowRight, ExternalLink, RefreshCw, X, ShieldCheck,
+  AlertTriangle, CreditCard
 } from 'lucide-react';
 import { Language, AppRoute, Appointment } from '../../types';
 import { getStoredAppointments, updateAppointmentStatus, saveAppointment } from '../../data/portalData';
+import { AdvocateResponseTimer } from './AdvocateResponseTimer';
 
 interface MyAppointmentsPageProps {
   language: Language;
@@ -23,7 +25,26 @@ export function MyAppointmentsPage({
   const [newTime, setNewTime] = useState('04:00 PM');
   const [cancelModalApt, setCancelModalApt] = useState<Appointment | null>(null);
 
-  const filteredAppointments = appointments.filter(apt => apt.status === activeTab);
+  const refreshAppointments = () => {
+    setAppointments(getStoredAppointments());
+  };
+
+  useEffect(() => {
+    refreshAppointments();
+  }, []);
+
+  const filteredAppointments = appointments.filter(apt => {
+    if (activeTab === 'upcoming') {
+      return apt.status === 'upcoming' || apt.status === 'confirmed' || apt.status === 'pending';
+    }
+    if (activeTab === 'completed') {
+      return apt.status === 'completed';
+    }
+    if (activeTab === 'cancelled') {
+      return apt.status === 'cancelled' || apt.status === 'expired' || apt.status === 'no-response';
+    }
+    return true;
+  });
 
   const handleCancel = (apt: Appointment) => {
     updateAppointmentStatus(apt.id, 'cancelled');
@@ -37,12 +58,18 @@ export function MyAppointmentsPage({
       ...rescheduleModalApt,
       date: newDate,
       time: newTime,
-      status: 'upcoming'
+      status: 'pending',
+      createdAt: new Date().toISOString(),
     };
     saveAppointment(updated);
     setAppointments(getStoredAppointments());
     setRescheduleModalApt(null);
   };
+
+  const pendingCount = appointments.filter(a => a.status === 'pending').length;
+  const upcomingCount = appointments.filter(a => a.status === 'upcoming' || a.status === 'confirmed' || a.status === 'pending').length;
+  const completedCount = appointments.filter(a => a.status === 'completed').length;
+  const cancelledCount = appointments.filter(a => a.status === 'cancelled' || a.status === 'expired' || a.status === 'no-response').length;
 
   return (
     <div className="space-y-6 pb-12">
@@ -59,8 +86,8 @@ export function MyAppointmentsPage({
           </h1>
           <p className="text-xs sm:text-sm text-slate-500">
             {language === 'en'
-              ? 'Manage scheduled consultations, video sessions, and counsel representations.'
-              : 'वकीलों के साथ निर्धारित सत्र, वीडियो परामर्श और समयरेखा प्रबंधित करें।'}
+              ? 'Manage scheduled consultations, video sessions, and track 24-hour advocate responses.'
+              : 'वकीलों के साथ निर्धारित सत्र, वीडियो परामर्श और 24-घंटे की स्वीकृति समयरेखा प्रबंधित करें।'}
           </p>
         </div>
 
@@ -78,13 +105,14 @@ export function MyAppointmentsPage({
       <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
         <button
           onClick={() => setActiveTab('upcoming')}
-          className={`py-2 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+          className={`py-2 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
             activeTab === 'upcoming'
               ? 'bg-sky-600 text-white shadow-xs'
               : 'text-slate-600 hover:bg-sky-50'
           }`}
         >
-          {language === 'en' ? 'Upcoming' : 'आगामी'} ({appointments.filter(a => a.status === 'upcoming').length})
+          <span>{language === 'en' ? 'Upcoming & Pending' : 'आगामी व प्रतीक्षारत'}</span>
+          <span className="text-[11px] px-1.5 py-0.2 rounded-full bg-white/20">({upcomingCount})</span>
         </button>
         <button
           onClick={() => setActiveTab('completed')}
@@ -94,7 +122,7 @@ export function MyAppointmentsPage({
               : 'text-slate-600 hover:bg-sky-50'
           }`}
         >
-          {language === 'en' ? 'Completed' : 'संपन्न'} ({appointments.filter(a => a.status === 'completed').length})
+          {language === 'en' ? 'Completed' : 'संपन्न'} ({completedCount})
         </button>
         <button
           onClick={() => setActiveTab('cancelled')}
@@ -104,7 +132,7 @@ export function MyAppointmentsPage({
               : 'text-slate-600 hover:bg-sky-50'
           }`}
         >
-          {language === 'en' ? 'Cancelled' : 'रद्द'} ({appointments.filter(a => a.status === 'cancelled').length})
+          {language === 'en' ? 'Expired / Cancelled' : 'समाप्त / रद्द'} ({cancelledCount})
         </button>
       </div>
 
@@ -136,7 +164,9 @@ export function MyAppointmentsPage({
           {filteredAppointments.map((apt) => (
             <div 
               key={apt.id}
-              className="bg-white rounded-2xl p-5 border border-sky-100 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+              className={`bg-white rounded-2xl p-5 border shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-4 ${
+                apt.status === 'pending' ? 'border-amber-200/90 bg-amber-50/20' : 'border-sky-100'
+              }`}
             >
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
@@ -151,16 +181,54 @@ export function MyAppointmentsPage({
                     </div>
                   </div>
 
-                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                    apt.status === 'upcoming' 
-                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
-                      : apt.status === 'completed'
-                      ? 'bg-slate-100 text-slate-700'
-                      : 'bg-rose-100 text-rose-700'
-                  }`}>
-                    {apt.status}
-                  </span>
+                  {/* Status Badge */}
+                  {apt.status === 'pending' && (
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                      <span>Pending Advocate Response</span>
+                    </span>
+                  )}
+                  {(apt.status === 'upcoming' || apt.status === 'confirmed') && (
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase">
+                      Confirmed
+                    </span>
+                  )}
+                  {(apt.status === 'expired' || apt.status === 'no-response') && (
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-200">
+                      No Response from Advocate
+                    </span>
+                  )}
+                  {apt.status === 'completed' && (
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 uppercase">
+                      Completed
+                    </span>
+                  )}
+                  {apt.status === 'cancelled' && (
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 uppercase">
+                      Cancelled
+                    </span>
+                  )}
                 </div>
+
+                {/* 24-Hour Countdown Timer for Pending Appointments */}
+                {apt.status === 'pending' && (
+                  <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200/90 flex items-center justify-between">
+                    <AdvocateResponseTimer
+                      createdAt={apt.createdAt}
+                      onExpire={refreshAppointments}
+                      compact={false}
+                    />
+                  </div>
+                )}
+
+                {/* Expired Message banner */}
+                {(apt.status === 'expired' || apt.status === 'no-response') && (
+                  <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-[11px] text-rose-700 font-medium">
+                    {language === 'en'
+                      ? 'The advocate did not respond within the 24-hour response window. You can choose another advocate immediately.'
+                      : 'अधिवक्ता ने 24 घंटे के भीतर उत्तर नहीं दिया। आप दूसरा अधिवक्ता चुन सकते हैं।'}
+                  </div>
+                )}
 
                 <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5 text-xs">
                   <div className="flex items-center justify-between font-bold text-slate-800">
@@ -193,7 +261,18 @@ export function MyAppointmentsPage({
                   View Details
                 </button>
 
-                {apt.status === 'upcoming' && (
+                {/* Choose another advocate button for expired appointments */}
+                {(apt.status === 'expired' || apt.status === 'no-response') && (
+                  <button
+                    onClick={() => onNavigate('appointments')}
+                    className="py-2 px-3.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                  >
+                    <span>Choose Another Advocate</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-sky-200" />
+                  </button>
+                )}
+
+                {(apt.status === 'upcoming' || apt.status === 'confirmed' || apt.status === 'pending') && (
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => {
@@ -205,20 +284,21 @@ export function MyAppointmentsPage({
                     >
                       Reschedule
                     </button>
-                    {apt.meetingLink ? (
-                      <a
-                        href={apt.meetingLink}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="py-2 px-3.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs"
+                    {(apt.status === 'upcoming' || apt.status === 'confirmed') ? (
+                      <button
+                        id={`btn-pay-consultation-fee-${apt.id}`}
+                        onClick={() => {
+                          window.open('https://paytm.com', '_blank', 'noopener,noreferrer');
+                        }}
+                        className="py-2 px-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer transition-all active:scale-95"
                       >
-                        <Video className="w-3.5 h-3.5" />
-                        <span>Join Call</span>
-                      </a>
+                        <CreditCard className="w-3.5 h-3.5" />
+                        <span>Pay Consultation Fee</span>
+                      </button>
                     ) : (
                       <button
                         onClick={() => alert(`Advocate contact: ${apt.advocatePhone}`)}
-                        className="py-2 px-3.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold"
+                        className="py-2 px-3.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold cursor-pointer"
                       >
                         Contact
                       </button>
@@ -250,6 +330,17 @@ export function MyAppointmentsPage({
             </div>
 
             <div className="space-y-3 text-xs">
+              {/* Response Timer Banner inside modal if pending */}
+              {selectedAppointment.status === 'pending' && (
+                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200/90 space-y-1.5">
+                  <span className="text-[10px] text-amber-800 font-bold uppercase block">Advocate Review Window</span>
+                  <AdvocateResponseTimer createdAt={selectedAppointment.createdAt} />
+                  <p className="text-[11px] text-amber-800 leading-normal">
+                    The advocate will accept your booking within 24 hours. You will receive an instant confirmation update here.
+                  </p>
+                </div>
+              )}
+
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
                 <span className="text-[10px] text-slate-400 uppercase font-bold">Assigned Counsel</span>
                 <p className="text-sm font-bold text-slate-900">{selectedAppointment.advocateName}</p>
@@ -275,26 +366,32 @@ export function MyAppointmentsPage({
                 <p className="text-slate-700 leading-relaxed font-normal">{selectedAppointment.issue}</p>
               </div>
 
-              {selectedAppointment.meetingLink && (
-                <div className="p-3 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-between">
+              {(selectedAppointment.status === 'upcoming' || selectedAppointment.status === 'confirmed') && (
+                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-3">
                   <div>
-                    <span className="text-[10px] text-sky-700 font-bold block">Encrypted Video Conference</span>
-                    <span className="text-xs text-slate-600 font-mono truncate">Google Meet Session Active</span>
+                    <span className="text-[10px] text-emerald-800 font-bold uppercase tracking-wider block">
+                      Consultation Fee Payment
+                    </span>
+                    <span className="text-xs text-slate-700 font-medium">
+                      Fee: ₹{selectedAppointment.fee} • Official Paytm Gateway
+                    </span>
                   </div>
-                  <a
-                    href={selectedAppointment.meetingLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="py-1.5 px-3 bg-sky-600 text-white rounded-lg font-bold text-xs hover:bg-sky-700"
+                  <button
+                    id="btn-modal-pay-consultation-fee"
+                    onClick={() => {
+                      window.open('https://paytm.com', '_blank', 'noopener,noreferrer');
+                    }}
+                    className="py-2 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-all active:scale-95"
                   >
-                    Open Link
-                  </a>
+                    <CreditCard className="w-3.5 h-3.5" />
+                    <span>Pay Consultation Fee</span>
+                  </button>
                 </div>
               )}
             </div>
 
             <div className="pt-2 flex justify-between gap-2 border-t border-slate-100">
-              {selectedAppointment.status === 'upcoming' && (
+              {(selectedAppointment.status === 'upcoming' || selectedAppointment.status === 'pending') && (
                 <button
                   onClick={() => {
                     const apt = selectedAppointment;
@@ -306,6 +403,19 @@ export function MyAppointmentsPage({
                   Cancel Appointment
                 </button>
               )}
+
+              {(selectedAppointment.status === 'expired' || selectedAppointment.status === 'no-response') && (
+                <button
+                  onClick={() => {
+                    setSelectedAppointment(null);
+                    onNavigate('appointments');
+                  }}
+                  className="py-2 px-4 bg-sky-600 text-white rounded-xl text-xs font-bold hover:bg-sky-700"
+                >
+                  Choose Another Advocate
+                </button>
+              )}
+
               <button
                 onClick={() => setSelectedAppointment(null)}
                 className="py-2 px-4 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 ml-auto"

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   User, Bot, Calendar, BookOpen, ShieldCheck, LogOut, ArrowLeft, 
   MessageSquare, FileText, Clock, CheckCircle2, ChevronRight, Sparkles,
-  Search, Bell, AlertCircle, PhoneCall, ExternalLink, Globe, Star
+  Search, Bell, AlertCircle, PhoneCall, ExternalLink, Globe, Star, CreditCard
 } from 'lucide-react';
 import { Language, AppRoute, AuthUser, AdvocateFeedback } from '../../types';
 import logoImg from '../../assets/images/nyaay_sarathi_logo_1787153284213.jpg';
@@ -261,10 +261,14 @@ export function CitizenDashboardPage({
 
                   <div className="flex sm:flex-col gap-2">
                     <button
-                      onClick={() => alert(language === 'en' ? 'Video consultation link will activate 5 minutes before scheduled slot.' : 'वीडियो परामर्श लिंक समय से ५ मिनट पहले सक्रिय होगा।')}
-                      className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold shadow-2xs cursor-pointer"
+                      id="btn-citizen-dashboard-pay-fee"
+                      onClick={() => {
+                        window.open('https://paytm.com', '_blank', 'noopener,noreferrer');
+                      }}
+                      className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-2xs cursor-pointer flex items-center justify-center gap-1.5 transition-all active:scale-95"
                     >
-                      {language === 'en' ? 'Join Session' : 'सत्र में शामिल हों'}
+                      <CreditCard className="w-3.5 h-3.5" />
+                      <span>{language === 'en' ? 'Pay Consultation Fee' : 'परामर्श शुल्क का भुगतान करें'}</span>
                     </button>
                     <button
                       onClick={() => onOpenDialog('book-appointment')}

@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Bot, Calendar, BookOpen, FileText, ArrowRight, Sparkles, 
   Clock, CheckCircle2, ShieldCheck, PhoneCall, ChevronRight,
   ExternalLink, UserCheck, AlertCircle, Bookmark, MessageSquare,
-  Star, ThumbsUp
+  Star, ThumbsUp, AlertTriangle, RefreshCw, CreditCard
 } from 'lucide-react';
 import { Language, AppRoute, AuthUser, Application, Appointment, AdvocateFeedback } from '../../types';
-import { getStoredApplications, getStoredAppointments, getStoredFeedback } from '../../data/portalData';
+import { getStoredApplications, getStoredAppointments, getStoredFeedback, updateAppointmentStatus } from '../../data/portalData';
 import { AdvocateFeedbackModal } from './AdvocateFeedbackModal';
+import { AdvocateResponseTimer } from './AdvocateResponseTimer';
 
 interface CitizenHomePageProps {
   user: AuthUser;
@@ -32,13 +33,22 @@ export function CitizenHomePage({
     return language === 'en' ? 'Good evening' : 'शुभ संध्या';
   };
 
-  const applications = getStoredApplications();
-  const appointments = getStoredAppointments();
+  const [appointments, setAppointments] = useState<Appointment[]>(() => getStoredAppointments());
+  const [applications, setApplications] = useState<Application[]>(() => getStoredApplications());
+
+  const refreshData = () => {
+    setAppointments(getStoredAppointments());
+    setApplications(getStoredApplications());
+  };
+
+  useEffect(() => {
+    refreshData();
+  }, []);
 
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [feedbacks, setFeedbacks] = useState<AdvocateFeedback[]>(() => getStoredFeedback());
 
-  const recentAppointments = appointments.slice(0, 2);
+  const recentAppointments = appointments.slice(0, 4);
   const recentApplications = applications.slice(0, 2);
 
   return (
@@ -331,52 +341,108 @@ export function CitizenHomePage({
                 {recentAppointments.map((apt) => (
                   <div 
                     key={apt.id}
-                    className="p-4 rounded-2xl bg-white/55 backdrop-blur-md border border-white/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-white/80 hover:border-sky-300/60 transition-all shadow-xs"
+                    className="p-4 rounded-2xl bg-white/65 backdrop-blur-md border border-white/85 flex flex-col justify-between gap-3 hover:bg-white/85 hover:border-sky-300/60 transition-all shadow-xs"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-sky-500/15 backdrop-blur-md text-sky-800 flex items-center justify-center font-bold text-sm shrink-0 border border-sky-300/40">
-                        {apt.advocateName.split(' ').slice(1, 3).map(n => n[0]).join('') || 'AD'}
-                      </div>
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-bold text-slate-900">{apt.advocateName}</h4>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            apt.status === 'upcoming' 
-                              ? 'bg-emerald-500/15 text-emerald-800 border border-emerald-300/40' 
-                              : 'bg-slate-200 text-slate-700'
-                          }`}>
-                            {apt.status === 'upcoming' ? (language === 'en' ? 'Confirmed' : 'पुष्ट') : apt.status}
-                          </span>
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-sky-500/15 backdrop-blur-md text-sky-800 flex items-center justify-center font-bold text-sm shrink-0 border border-sky-300/40">
+                          {apt.advocateName.split(' ').slice(1, 3).map(n => n[0]).join('') || 'AD'}
                         </div>
-                        <p className="text-xs text-slate-500 font-medium">{apt.advocateSpecialty}</p>
-                        <p className="text-xs text-slate-700 font-semibold flex items-center gap-1.5 pt-0.5">
-                          <Clock className="w-3.5 h-3.5 text-sky-600" />
-                          <span>{apt.date} • {apt.time} ({apt.consultationType} Consultation)</span>
-                        </p>
-                      </div>
-                    </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-sm font-bold text-slate-900">{apt.advocateName}</h4>
+                            
+                            {/* Status Badges */}
+                            {apt.status === 'pending' && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100/90 text-amber-900 border border-amber-300 shadow-2xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                                <span>{language === 'en' ? 'Pending Advocate Response' : 'अधिवक्ता स्वीकृति प्रतीक्षारत'}</span>
+                              </span>
+                            )}
+                            {(apt.status === 'upcoming' || apt.status === 'confirmed') && (
+                              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                {language === 'en' ? 'Confirmed' : 'पुष्ट'}
+                              </span>
+                            )}
+                            {(apt.status === 'expired' || apt.status === 'no-response') && (
+                              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300">
+                                {language === 'en' ? 'No Response from Advocate' : 'अधिवक्ता से कोई प्रतिक्रिया नहीं'}
+                              </span>
+                            )}
+                            {apt.status === 'completed' && (
+                              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700">
+                                {language === 'en' ? 'Completed' : 'संपन्न'}
+                              </span>
+                            )}
+                            {apt.status === 'cancelled' && (
+                              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700">
+                                {language === 'en' ? 'Cancelled' : 'रद्द'}
+                              </span>
+                            )}
+                          </div>
 
-                    <div className="flex sm:flex-col gap-2 shrink-0">
-                      {apt.status === 'upcoming' && (
+                          <p className="text-xs text-slate-500 font-medium">{apt.advocateSpecialty}</p>
+                          
+                          <p className="text-xs text-slate-700 font-semibold flex items-center gap-1.5 pt-0.5">
+                            <Clock className="w-3.5 h-3.5 text-sky-600" />
+                            <span>{apt.date} • {apt.time} ({apt.consultationType} Consultation)</span>
+                          </p>
+
+                          {/* 24-Hour Advocate Response Timer for Pending */}
+                          {apt.status === 'pending' && (
+                            <div className="pt-1.5">
+                              <AdvocateResponseTimer
+                                createdAt={apt.createdAt}
+                                onExpire={refreshData}
+                                compact={false}
+                              />
+                            </div>
+                          )}
+
+                          {/* Explanatory note for expired */}
+                          {(apt.status === 'expired' || apt.status === 'no-response') && (
+                            <p className="text-[11px] text-rose-600 font-medium pt-1">
+                              {language === 'en'
+                                ? 'The 24-hour response window ended without advocate confirmation. Please choose another advocate.'
+                                : '24 घंटे की प्रतिक्रिया समयसीमा समाप्त हो गई है। कृपया दूसरा अधिवक्ता चुनें।'}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="flex sm:flex-col gap-2 shrink-0 self-end sm:self-center">
+                        {(apt.status === 'expired' || apt.status === 'no-response') && (
+                          <button
+                            id={`btn-choose-another-adv-${apt.id}`}
+                            onClick={() => onNavigate('appointments')}
+                            className="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold shadow-xs cursor-pointer flex items-center justify-center gap-1.5 transition-all"
+                          >
+                            <span>{language === 'en' ? 'Choose Another Advocate' : 'दूसरा अधिवक्ता चुनें'}</span>
+                            <ArrowRight className="w-3.5 h-3.5 text-sky-200" />
+                          </button>
+                        )}
+
+                        {(apt.status === 'upcoming' || apt.status === 'confirmed') && (
+                          <button
+                            id={`btn-pay-consultation-fee-${apt.id}`}
+                            onClick={() => {
+                              window.open('https://paytm.com', '_blank', 'noopener,noreferrer');
+                            }}
+                            className="glass-btn-primary px-3.5 py-1.5 rounded-xl text-white text-xs font-bold shadow-xs cursor-pointer text-center flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                          >
+                            <CreditCard className="w-3.5 h-3.5" />
+                            <span>{language === 'en' ? 'Pay Consultation Fee' : 'परामर्श शुल्क का भुगतान करें'}</span>
+                          </button>
+                        )}
+
                         <button
-                          onClick={() => {
-                            if (apt.meetingLink) {
-                              window.open(apt.meetingLink, '_blank');
-                            } else {
-                              alert(language === 'en' ? 'Consultation link will be activated 5 minutes before the session.' : 'परामर्श लिंक सत्र से ५ मिनट पहले सक्रिय होगा।');
-                            }
-                          }}
-                          className="glass-btn-primary px-3.5 py-1.5 rounded-xl text-white text-xs font-bold shadow-xs cursor-pointer text-center"
+                          onClick={() => onNavigate('user/appointments')}
+                          className="glass-btn px-3.5 py-1.5 rounded-xl bg-white/70 hover:bg-white border border-white/80 text-slate-800 text-xs font-semibold cursor-pointer text-center"
                         >
-                          {language === 'en' ? 'Join Session' : 'सत्र में जुड़ें'}
+                          {language === 'en' ? 'Details' : 'विवरण'}
                         </button>
-                      )}
-                      <button
-                        onClick={() => onNavigate('user/appointments')}
-                        className="glass-btn px-3.5 py-1.5 rounded-xl bg-white/70 hover:bg-white border border-white/80 text-slate-800 text-xs font-semibold cursor-pointer text-center"
-                      >
-                        {language === 'en' ? 'Details' : 'विवरण'}
-                      </button>
+                      </div>
                     </div>
                   </div>
                 ))}

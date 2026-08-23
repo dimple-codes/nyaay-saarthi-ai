@@ -15,6 +15,8 @@ import { AdvocateLoginPage } from './components/auth/AdvocateLoginPage';
 import { CitizenRegisterPage } from './components/auth/CitizenRegisterPage';
 import { AdvocateRegisterPage } from './components/auth/AdvocateRegisterPage';
 import { AdvocateDashboardPage } from './components/dashboard/AdvocateDashboardPage';
+import { AdvocateUserProfilePage } from './components/dashboard/AdvocateUserProfilePage';
+import { AdvocateCaseDocumentsPage } from './components/dashboard/AdvocateCaseDocumentsPage';
 
 // Citizen Portal Component Suite
 import { CitizenNavbar } from './components/citizen/CitizenNavbar';
@@ -66,6 +68,8 @@ function parseCurrentRoute(): AppRoute {
 
   // Advocate Portal Routes
   if (target === 'advocate-dashboard' || target === 'advocate/home' || target === 'advocate') return 'advocate-dashboard';
+  if (target === 'advocate/user-profile' || target === 'advocate-user-profile') return 'advocate/user-profile';
+  if (target === 'advocate/documents' || target === 'advocate-documents' || target === 'advocate/evidence') return 'advocate/documents';
 
   return 'home';
 }
@@ -90,7 +94,7 @@ export default function App() {
       'user/home', 'user/profile', 'user/settings', 
       'user/applications', 'user/appointments', 'user/saved',
       'chat', 'appointments', 'rights', 'advocate-profile', 'appointment-book',
-      'advocate-dashboard', 'advocate/home'
+      'advocate-dashboard', 'advocate/home', 'advocate/user-profile', 'advocate/documents'
     ];
     let storedUser: AuthUser | null = null;
     try {
@@ -101,15 +105,15 @@ export default function App() {
     }
     if (protectedRoutes.includes(route)) {
       if (!storedUser) {
-        if (route === 'advocate-dashboard' || route === 'advocate/home') {
+        if (['advocate-dashboard', 'advocate/home', 'advocate/user-profile', 'advocate/documents'].includes(route)) {
           return 'auth/login/advocate';
         }
         return 'auth/login/citizen';
       }
-      if (storedUser.role === 'advocate' && !['advocate-dashboard', 'advocate/home', 'chat'].includes(route)) {
+      if (storedUser.role === 'advocate' && !['advocate-dashboard', 'advocate/home', 'advocate/user-profile', 'advocate/documents', 'chat'].includes(route)) {
         return 'advocate-dashboard';
       }
-      if (storedUser.role === 'citizen' && ['advocate-dashboard', 'advocate/home'].includes(route)) {
+      if (storedUser.role === 'citizen' && ['advocate-dashboard', 'advocate/home', 'advocate/user-profile', 'advocate/documents'].includes(route)) {
         return 'user/home';
       }
     }
@@ -119,6 +123,7 @@ export default function App() {
   // Portal auxiliary state: selected advocate and pre-filled category
   const [selectedAdvocate, setSelectedAdvocate] = useState<Advocate | null>(() => MOCK_ADVOCATES[0]);
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string | null>(null);
+  const [selectedCaseData, setSelectedCaseData] = useState<any>(null);
 
   // Modal / Interactive Dialog State for footer links
   const [dialogState, setDialogState] = useState<{
@@ -156,7 +161,7 @@ export default function App() {
     if (route === 'auth/login') resolvedRoute = 'auth/login/citizen';
     if (route === 'auth/register') resolvedRoute = 'auth/register/citizen';
 
-    // Handle extra params (e.g. advocate or category)
+    // Handle extra params (e.g. advocate or category or case/request)
     if (params?.advocate) {
       setSelectedAdvocate(params.advocate);
     }
@@ -164,6 +169,9 @@ export default function App() {
       setActiveCategoryFilter(params.category);
     } else if (route === 'appointments' && !params?.category) {
       setActiveCategoryFilter(null);
+    }
+    if (params?.request || params?.case) {
+      setSelectedCaseData(params.request || params.case);
     }
 
     const effectiveUser = overrideUser !== undefined ? overrideUser : (currentUser || (() => {
@@ -183,19 +191,21 @@ export default function App() {
       'chat', 'appointments', 'rights', 'advocate-profile', 'appointment-book'
     ];
 
+    const advocateProtectedRoutes: AppRoute[] = [
+      'advocate-dashboard', 'advocate/home', 'advocate/user-profile', 'advocate/documents'
+    ];
+
     if (citizenProtectedRoutes.includes(resolvedRoute)) {
       if (!effectiveUser) {
         resolvedRoute = 'auth/login/citizen';
       } else if (effectiveUser.role !== 'citizen' && resolvedRoute !== 'chat') {
         resolvedRoute = 'advocate-dashboard';
       }
-    } else if (resolvedRoute === 'advocate-dashboard' || resolvedRoute === 'advocate/home') {
+    } else if (advocateProtectedRoutes.includes(resolvedRoute)) {
       if (!effectiveUser) {
         resolvedRoute = 'auth/login/advocate';
       } else if (effectiveUser.role !== 'advocate') {
         resolvedRoute = 'user/home';
-      } else {
-        resolvedRoute = 'advocate-dashboard';
       }
     }
 
@@ -418,6 +428,14 @@ export default function App() {
             <AdvocateDiscoveryPage
               language={language}
               onNavigate={navigateTo}
+              onSelectAdvocate={(adv) => {
+                setSelectedAdvocate(adv);
+                navigateTo('advocate-profile', { advocate: adv });
+              }}
+              onBookAppointment={(adv) => {
+                setSelectedAdvocate(adv);
+                navigateTo('appointment-book', { advocate: adv });
+              }}
               initialCategory={activeCategoryFilter || undefined}
             />
           )}
@@ -427,6 +445,10 @@ export default function App() {
               advocate={selectedAdvocate}
               language={language}
               onNavigate={navigateTo}
+              onBookAppointment={(adv) => {
+                setSelectedAdvocate(adv);
+                navigateTo('appointment-book', { advocate: adv });
+              }}
             />
           )}
 
@@ -535,6 +557,72 @@ export default function App() {
           onLogout={handleLogout}
           onOpenDialog={(actionKey, topic) => handleActionClick(actionKey, topic)}
           initialView={currentRoute === 'chat' ? 'chat' : 'feed'}
+        />
+
+        <InteractiveDialogs
+          isOpen={dialogState.isOpen}
+          onClose={closeDialog}
+          language={language}
+          actionKey={dialogState.actionKey}
+          title={dialogState.title}
+          linkData={dialogState.linkData}
+        />
+      </>
+    );
+  }
+
+  // 7.1 Advocate Show User Profile Page
+  if (currentRoute === 'advocate/user-profile') {
+    if (!currentUser || currentUser.role !== 'advocate') {
+      return (
+        <AdvocateLoginPage
+          language={language}
+          onLanguageChange={setLanguage}
+          onNavigate={navigateTo}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      );
+    }
+
+    return (
+      <>
+        <AdvocateUserProfilePage
+          language={language}
+          onNavigate={navigateTo}
+          caseData={selectedCaseData}
+        />
+
+        <InteractiveDialogs
+          isOpen={dialogState.isOpen}
+          onClose={closeDialog}
+          language={language}
+          actionKey={dialogState.actionKey}
+          title={dialogState.title}
+          linkData={dialogState.linkData}
+        />
+      </>
+    );
+  }
+
+  // 7.2 Advocate View Documents / Evidence Page
+  if (currentRoute === 'advocate/documents') {
+    if (!currentUser || currentUser.role !== 'advocate') {
+      return (
+        <AdvocateLoginPage
+          language={language}
+          onLanguageChange={setLanguage}
+          onNavigate={navigateTo}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      );
+    }
+
+    return (
+      <>
+        <AdvocateCaseDocumentsPage
+          language={language}
+          onNavigate={navigateTo}
+          caseData={selectedCaseData}
         />
 
         <InteractiveDialogs
