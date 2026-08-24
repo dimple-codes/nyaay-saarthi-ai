@@ -222,18 +222,18 @@ export function AboutUsPage({
             {/* Middle: Subtle Branding Badge */}
             <div 
               onClick={onBackToHome}
-              className="cursor-pointer hidden md:flex items-center gap-2 select-none"
+              className="cursor-pointer hidden md:flex items-center gap-2.5 select-none"
             >
-              <div className="w-8 h-8 rounded-xl bg-white/90 border border-white/80 p-0.5 shadow-xs overflow-hidden">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white/95 border border-white/90 p-0.5 shadow-sm overflow-hidden">
                 <img 
                   src={logoImg} 
                   alt="Nyaay सारथी Logo" 
-                  className="w-full h-full object-cover rounded-lg"
+                  className="w-full h-full object-cover rounded-xl"
                   referrerPolicy="no-referrer"
                 />
               </div>
-              <span className="text-sm font-bold text-slate-900">
-                Nyaay <span className="text-sky-600 font-['Noto_Sans_Devanagari',sans-serif] font-extrabold">सारथी</span>
+              <span className="text-sm font-semibold text-slate-900">
+                <span className="font-normal text-slate-800">Nyaay</span> <span className="text-sky-600 font-['Noto_Sans_Devanagari',sans-serif] font-bold">सारथी</span>
               </span>
               <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-sky-500/15 border border-sky-300/40 text-sky-900 font-bold">
                 {language === 'en' ? 'About Us' : 'हमारे बारे में'}
@@ -289,7 +289,7 @@ export function AboutUsPage({
             >
               <div className="relative group">
                 <div className="absolute -inset-3 bg-gradient-to-r from-sky-400/30 to-blue-500/30 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300" />
-                <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-white/90 backdrop-blur-xl p-2.5 border border-white/90 shadow-[0_12px_40px_rgba(31,38,135,0.15)] flex items-center justify-center overflow-hidden">
+                <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-3xl bg-white/95 backdrop-blur-xl p-3 border border-white/95 shadow-[0_16px_48px_rgba(31,38,135,0.18)] flex items-center justify-center overflow-hidden">
                   <img
                     src={logoImg}
                     alt="Nyaay सारथी Logo"

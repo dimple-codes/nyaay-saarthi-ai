@@ -992,8 +992,48 @@ export function analyzeAndGenerateLegalGuidance(query: string, language: Languag
   }
 
   const responseText = language === 'hi'
-    ? `न्याय सारथी कानूनी विश्लेषण:\n\nआपकी स्थिति: ${understanding}\n\nसंभावित अधिकार: ${rights.join(' ')}\n\nउचित फोरम: ${authority}\n\nअगला कदम: ${nextSteps[0]}`
-    : `Here is the structured legal breakdown for your situation:`;
+    ? `### 🏷️ मुख्य विषय: ${category.toUpperCase()} विवाद
+**प्रत्यक्ष समाधान:** ${understanding}
+
+---
+
+### ⚖️ प्रमुख कानूनी अधिकार व धाराएं
+${rights.map(r => `* 📜 ${r}`).join('\n')}
+
+---
+
+### 📋 3-चरणीय कार्ययोजना
+${nextSteps.slice(0, 3).map((s, idx) => `* ${idx + 1}️⃣ **चरण ${idx + 1}:** ${s}`).join('\n')}
+
+---
+
+### 🏛️ फोरम एवं आधिकारिक हेल्पलाइन
+* 🌐 **प्राधिकरण / पोर्टल:** ${authority}
+* 📞 **विधिक सहायता:** ${legalAid}
+
+---
+*ℹ️ यह सामान्य कानूनी मार्गदर्शन है। न्यायालयीन प्रतिनिधित्व हेतु DLSA या पंजीकृत अधिवक्ता से संपर्क करें।*`
+    : `### 🏷️ Main Topic: ${category.toUpperCase()} Dispute
+**Direct Summary:** ${understanding}
+
+---
+
+### ⚖️ Key Legal Rights & Statutory Provisions
+${rights.map(r => `* 📜 ${r}`).join('\n')}
+
+---
+
+### 📋 3-Step Action Checklist
+${nextSteps.slice(0, 3).map((s, idx) => `* ${idx + 1}️⃣ **Step ${idx + 1}:** ${s}`).join('\n')}
+
+---
+
+### 🏛️ Forum & Official Helplines
+* 🌐 **Competent Forum / Portal:** ${authority}
+* 📞 **Free Legal Aid Helpline:** ${legalAid}
+
+---
+*ℹ️ Educational legal guidance under Indian law. Consult a registered advocate or DLSA clinic for representation.*`;
 
   return {
     id: "msg_" + Date.now().toString(),

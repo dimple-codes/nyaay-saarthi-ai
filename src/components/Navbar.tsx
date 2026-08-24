@@ -101,28 +101,28 @@ export function Navbar({
   return (
     <header className="sticky top-0 z-40 w-full bg-white/70 backdrop-blur-xl border-b border-white/60 shadow-[0_4px_24px_rgba(31,38,135,0.06)] transition-all">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-18 sm:h-20 gap-2">
+        <div className="flex items-center justify-between h-20 sm:h-22 gap-2">
           {/* Logo & Portal Name with Frosted Glass Badge */}
           <div 
             onClick={handleHomeClick}
             id="brand-logo-button"
-            className="flex items-center gap-2.5 sm:gap-3 cursor-pointer group select-none shrink-0"
+            className="flex items-center gap-3 sm:gap-3.5 cursor-pointer group select-none shrink-0"
           >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/80 backdrop-blur-md border border-white/80 p-0.5 flex items-center justify-center shadow-xs group-hover:shadow-[0_0_18px_rgba(74,144,226,0.35)] group-hover:scale-105 transition-all duration-300 shrink-0 overflow-hidden">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 rounded-2xl flex items-center justify-center shadow-md group-hover:shadow-[0_0_20px_rgba(74,144,226,0.4)] group-hover:scale-105 transition-all duration-300 shrink-0 overflow-hidden ring-1 ring-slate-900/10">
               <img 
                 src={logoImg} 
                 alt="Nyaay सारथी Logo" 
-                className="w-full h-full object-cover rounded-xl"
+                className="w-full h-full object-cover rounded-2xl" 
                 referrerPolicy="no-referrer"
               />
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5 whitespace-nowrap">
-                <span className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 font-['Plus_Jakarta_Sans',sans-serif]">
-                  Nyaay <span className="text-sky-600 font-['Noto_Sans_Devanagari',sans-serif] font-extrabold">सारथी</span>
+                <span className="text-xl sm:text-2xl tracking-tight text-slate-900 font-['Outfit','Plus_Jakarta_Sans',sans-serif]">
+                  <span className="font-normal text-slate-800">Nyaay</span> <span className="text-sky-600 font-['Noto_Sans_Devanagari',sans-serif] font-bold">सारथी</span>
                 </span>
               </div>
-              <span className="text-[11px] sm:text-xs font-medium text-slate-500 hidden md:inline-block whitespace-nowrap">
+              <span className="text-[11px] sm:text-xs font-medium text-slate-600 hidden md:inline-block whitespace-nowrap">
                 {language === 'en' ? 'Citizen Legal Assistance & Rights' : 'नागरिक कानूनी सहायता व अधिकार मंच'}
               </span>
             </div>

@@ -33,18 +33,18 @@ export function RoleSelectionPage({
 
           <div 
             onClick={() => onNavigate('home')}
-            className="flex items-center gap-2 cursor-pointer select-none"
+            className="flex items-center gap-2.5 cursor-pointer select-none"
           >
-            <div className="w-8 h-8 rounded-xl bg-white/90 border border-white/80 p-0.5 shadow-xs overflow-hidden">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white/95 border border-white/90 p-0.5 shadow-sm overflow-hidden">
               <img 
                 src={logoImg} 
                 alt="Nyaay सारथी Logo" 
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-cover rounded-xl"
                 referrerPolicy="no-referrer"
               />
             </div>
-            <span className="text-base font-bold text-slate-900 tracking-tight">
-              Nyaay <span className="text-sky-600 font-['Noto_Sans_Devanagari',sans-serif] font-extrabold">सारथी</span>
+            <span className="text-base sm:text-lg tracking-tight text-slate-900 font-['Plus_Jakarta_Sans',sans-serif]">
+              <span className="font-normal text-slate-800">Nyaay</span> <span className="text-sky-600 font-['Noto_Sans_Devanagari',sans-serif] font-bold">सारथी</span>
             </span>
           </div>
 
@@ -83,8 +83,12 @@ export function RoleSelectionPage({
               <span>{language === 'en' ? 'Get Started' : 'प्रारंभ करें'}</span>
             </div>
             
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight font-['Plus_Jakarta_Sans',sans-serif]">
-              {language === 'en' ? 'How would you like to use Nyaay सारथी?' : 'आप न्याय सारथी का उपयोग किस रूप में करना चाहते हैं?'}
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-slate-900 tracking-tight font-['Plus_Jakarta_Sans',sans-serif]">
+              {language === 'en' ? (
+                <span>How would you like to use <span className="font-normal text-slate-800">Nyaay</span> <span className="text-sky-600 font-['Noto_Sans_Devanagari',sans-serif] font-bold">सारथी</span>?</span>
+              ) : (
+                <span>आप न्याय सारथी का उपयोग किस रूप में करना चाहते हैं?</span>
+              )}
             </h1>
             
             <p className="text-sm sm:text-base text-slate-600 mt-2 font-medium">

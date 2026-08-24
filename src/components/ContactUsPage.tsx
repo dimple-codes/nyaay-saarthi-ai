@@ -318,18 +318,18 @@ export function ContactUsPage({
 
               <div 
                 onClick={onBackToHome}
-                className="cursor-pointer hidden sm:flex items-center gap-2 select-none pl-2 border-l border-white/80"
+                className="cursor-pointer hidden sm:flex items-center gap-2.5 select-none pl-2 border-l border-white/80"
               >
-                <div className="w-8 h-8 rounded-xl bg-white/90 border border-white/80 p-0.5 shadow-xs overflow-hidden">
+                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white/95 border border-white/90 p-0.5 shadow-sm overflow-hidden">
                   <img 
                     src={logoImg} 
                     alt="Nyaay सारथी Logo" 
-                    className="w-full h-full object-cover rounded-lg"
+                    className="w-full h-full object-cover rounded-xl"
                     referrerPolicy="no-referrer"
                   />
                 </div>
-                <span className="text-sm font-bold text-slate-900">
-                  Nyaay <span className="text-sky-600 font-['Noto_Sans_Devanagari',sans-serif] font-extrabold">सारथी</span>
+                <span className="text-sm font-semibold text-slate-900">
+                  <span className="font-normal text-slate-800">Nyaay</span> <span className="text-sky-600 font-['Noto_Sans_Devanagari',sans-serif] font-bold">सारथी</span>
                 </span>
                 <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-sky-500/15 border border-sky-300/40 text-sky-900 font-bold">
                   {language === 'en' ? 'Support' : 'सहायता'}

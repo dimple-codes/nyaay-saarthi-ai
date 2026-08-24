@@ -1,7 +1,9 @@
 {
-  "name": "Remix nyaay-saarthi-ai",
-  "description": "Imported from GitHub: divyansh805/nyaay-saarthi-ai",
-  "requestFramePermissions": [],
+  "name": "Remix nyaay-saarthi",
+  "description": "Imported from GitHub: chaitanyavs0009-cpu/nyaay-saarthi",
+  "requestFramePermissions": [
+    "microphone"
+  ],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
   ]

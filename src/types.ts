@@ -183,12 +183,40 @@ export interface AiCaseSummary {
   estimatedRemedy: string;
 }
 
+export interface EmergencyHelpline {
+  name: string;
+  nameHi?: string;
+  number: string;
+  category: 'national' | 'women' | 'cyber' | 'legal' | 'mental_health' | 'child' | 'police';
+  description: string;
+  descriptionHi?: string;
+  available?: string;
+  tollFree?: boolean;
+}
+
+export interface ChatSession {
+  id: string;
+  userId: string;
+  title: string;
+  summary?: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: ChatMessage[];
+  isFlaggedEmergency?: boolean;
+  emergencyCategory?: string;
+}
+
 export interface ChatMessage {
   id: string;
   sender: 'user' | 'assistant';
   text: string;
   timestamp: string;
   isAiGenerated?: boolean;
+  isStreaming?: boolean;
+  isError?: boolean;
+  flaggedEmergency?: boolean;
+  emergencyHelplines?: EmergencyHelpline[];
+  emergencyCategory?: string;
   structuredData?: {
     understanding?: string;
     rights?: string[];

@@ -132,18 +132,20 @@ export function InteractiveDialogs({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-sky-100 bg-[#F8FAFC]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-white border border-sky-100 p-0.5 flex items-center justify-center shadow-xs overflow-hidden">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white border border-sky-100 p-0.5 flex items-center justify-center shadow-sm overflow-hidden">
               <img 
                 src={logoImg} 
                 alt="Nyaay सारथी Logo" 
-                className="w-full h-full object-cover rounded-md"
+                className="w-full h-full object-cover rounded-xl"
                 referrerPolicy="no-referrer"
               />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-base sm:text-lg">
-                {title || 'Nyaay सारथी'}
+              <h3 className="font-semibold text-slate-900 text-base sm:text-lg">
+                {title || (
+                  <span><span className="font-normal text-slate-800">Nyaay</span> <span className="text-sky-600 font-['Noto_Sans_Devanagari',sans-serif] font-bold">सारथी</span></span>
+                )}
               </h3>
               <p className="text-xs text-sky-600 font-medium">
                 {language === 'en' ? 'Digital Legal Portal' : 'डिजिटल कानूनी पोर्टल'}

@@ -14,11 +14,11 @@ export function HeroSection({ language, onActionClick }: HeroSectionProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Headline */}
         <div className="text-center max-w-4xl mx-auto mb-10 pt-2">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/60 backdrop-blur-md border border-white/80 text-sky-900 text-xs sm:text-sm font-semibold mb-5 shadow-[0_4px_16px_rgba(31,38,135,0.06)]">
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/70 backdrop-blur-md border border-white/85 text-sky-900 text-xs sm:text-sm font-semibold mb-5 shadow-[0_4px_16px_rgba(31,38,135,0.06)]">
             <img 
               src={logoImg} 
               alt="Nyaay सारथी" 
-              className="w-5 h-5 rounded-full object-cover shadow-xs" 
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover shadow-sm ring-1 ring-sky-300/60" 
               referrerPolicy="no-referrer"
             />
             <span>{language === 'en' ? 'Digital Legal Empowerment Platform' : 'डिजिटल कानूनी सशक्तिकरण मंच'}</span>
@@ -64,20 +64,24 @@ export function HeroSection({ language, onActionClick }: HeroSectionProps) {
 
         {/* "What is it" Content Card - Tinted Glass Showcase */}
         <div className="glass-panel bg-white/60 backdrop-blur-xl rounded-3xl border border-white/80 shadow-[0_12px_40px_rgba(31,38,135,0.08)] p-6 sm:p-8 lg:p-10 max-w-5xl mx-auto">
-          <div className="flex items-center gap-3.5 mb-6 pb-4 border-b border-sky-100/60">
-            <div className="w-12 h-12 rounded-2xl bg-white/80 backdrop-blur-md border border-white/80 p-0.5 flex items-center justify-center shadow-xs overflow-hidden shrink-0">
+          <div className="flex items-center gap-4 sm:gap-5 mb-6 pb-4 border-b border-sky-100/60">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-white/90 backdrop-blur-md border border-white/90 p-1 flex items-center justify-center shadow-md overflow-hidden shrink-0">
               <img 
                 src={logoImg} 
                 alt="Nyaay सारथी" 
-                className="w-full h-full object-cover rounded-xl"
+                className="w-full h-full object-cover rounded-2xl"
                 referrerPolicy="no-referrer"
               />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
-                {HERO_CONTENT.whatIsItTitle[language]}
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-slate-900">
+                {language === 'en' ? (
+                  <span>What is <span className="font-normal text-slate-800">Nyaay</span> <span className="text-sky-600 font-['Noto_Sans_Devanagari',sans-serif] font-bold">सारथी</span>?</span>
+                ) : (
+                  <span>{HERO_CONTENT.whatIsItTitle[language]}</span>
+                )}
               </h2>
-              <p className="text-xs sm:text-sm text-slate-600 font-medium">
+              <p className="text-xs sm:text-sm text-slate-600 font-medium mt-0.5">
                 {language === 'en' 
                   ? 'Designed to make Indian justice transparent, fast, and accessible for all citizens.'
                   : 'भारतीय न्याय प्रणाली को हर नागरिक के लिए सुलभ, सरल और पारदर्शी बनाने का प्रयास।'}

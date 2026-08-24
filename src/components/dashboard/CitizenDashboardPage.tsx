@@ -46,18 +46,18 @@ export function CitizenDashboardPage({
 
             <div 
               onClick={() => onNavigate('home')}
-              className="flex items-center gap-2 cursor-pointer select-none"
+              className="flex items-center gap-2.5 cursor-pointer select-none"
             >
-              <div className="w-8 h-8 rounded-lg bg-white border border-sky-100 p-0.5 shadow-2xs overflow-hidden">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white border border-sky-100 p-0.5 shadow-sm overflow-hidden">
                 <img 
                   src={logoImg} 
                   alt="Nyaay सारथी Logo" 
-                  className="w-full h-full object-cover rounded-md"
+                  className="w-full h-full object-cover rounded-xl"
                   referrerPolicy="no-referrer"
                 />
               </div>
-              <span className="text-base font-bold text-slate-900 tracking-tight">
-                Nyaay <span className="text-sky-600 font-['Noto_Sans_Devanagari',sans-serif] font-extrabold">सारथी</span>
+              <span className="text-base sm:text-lg tracking-tight text-slate-900 font-['Plus_Jakarta_Sans',sans-serif]">
+                <span className="font-normal text-slate-800">Nyaay</span> <span className="text-sky-600 font-['Noto_Sans_Devanagari',sans-serif] font-bold">सारथी</span>
               </span>
             </div>
           </div>
